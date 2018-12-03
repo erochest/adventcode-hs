@@ -36,6 +36,7 @@ executables:
     dependencies:
     # - day1
     - bytestring
+    - unordered-containers
 
 # tests:
 #   day1-test:
