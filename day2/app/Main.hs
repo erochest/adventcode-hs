@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Main where
 
 import           Control.Arrow
@@ -23,12 +25,10 @@ findMatches :: [BS.ByteString] -> Maybe (BS.ByteString, BS.ByteString)
 findMatches xs = listToMaybe $ concatMap (findMatches' xs) xs
   where
     findMatches' :: [BS.ByteString] -> BS.ByteString -> [(BS.ByteString, BS.ByteString)]
-    findMatches' xs x = mapMaybe (findMatch x) xs
+    findMatches' xs x = filter (uncurry matches) $ map (x,) xs
 
-    findMatch :: BS.ByteString -> BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
-    findMatch a b = if missCount == 1 then Just (a, b) else Nothing
-      where
-        missCount = length $ filter (uncurry (/=)) $ BS.zip a b
+    matches :: BS.ByteString -> BS.ByteString -> Bool
+    matches a b = (== 1) $ length $ filter (uncurry (/=)) $ BS.zip a b
 
 onlySame :: BS.ByteString -> BS.ByteString -> BS.ByteString
 onlySame a b = BS.pack $ map fst $ filter (uncurry (==)) $ BS.zip a b
