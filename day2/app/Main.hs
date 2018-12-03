@@ -1,43 +1,34 @@
 module Main where
 
+import           Control.Arrow
 import qualified Data.ByteString.Lazy.Builder as B
-import qualified Data.ByteString.Lazy.Char8 as BS
-import qualified Data.HashMap.Strict as M
-import Data.Monoid
-import Data.Foldable
-import Data.Hashable
-import Control.Arrow
+import qualified Data.ByteString.Lazy.Char8   as BS
+import           Data.Foldable
+import           Data.Hashable
+import qualified Data.HashMap.Strict          as M
+import           Data.Maybe
+import           Data.Monoid
 
 main :: IO ()
 main = BS.interact
      $ B.toLazyByteString
      . (<> B.charUtf8 '\n')
-     . B.intDec
-     . uncurry (*)
-     . foldl' addIfPair (0, 0)
-     . fmap twosAndThrees
-     . fmap (BS.foldl' insert mempty)
+     . B.lazyByteString
+     . uncurry onlySame
+     . fromJust         -- This line will throw an error if no matches are found.
+     . findMatches
      . BS.lines
 
-newtype Counts a = Counts { getCounts :: M.HashMap a (Sum Int) }
-
-instance (Eq a, Hashable a) => Semigroup (Counts a) where
-  (Counts a) <> (Counts b) = Counts $ M.unionWith (<>) a b
-
-instance (Eq a, Hashable a) => Monoid (Counts a) where
-  mempty = Counts M.empty
-
-insert :: (Eq a, Hashable a) => Counts a -> a -> Counts a
-insert (Counts c) x = Counts $ M.insertWith mappend x (Sum 1) c
-
-twosAndThrees :: Counts a -> (Bool, Bool)
-twosAndThrees (Counts a) = (2 `elem` values, 3 `elem` values)
+findMatches :: [BS.ByteString] -> Maybe (BS.ByteString, BS.ByteString)
+findMatches xs = listToMaybe $ concatMap (findMatches' xs) xs
   where
-    values = M.elems a
+    findMatches' :: [BS.ByteString] -> BS.ByteString -> [(BS.ByteString, BS.ByteString)]
+    findMatches' xs x = mapMaybe (findMatch x) xs
 
-addIf :: Int -> Bool -> Int
-addIf x True = x + 1
-addIf x False = x
+    findMatch :: BS.ByteString -> BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
+    findMatch a b = if missCount == 1 then Just (a, b) else Nothing
+      where
+        missCount = length $ filter (uncurry (/=)) $ BS.zip a b
 
-addIfPair :: (Int, Int) -> (Bool, Bool) -> (Int, Int)
-addIfPair (x, y) (a, b) = (addIf x a, addIf y b)
+onlySame :: BS.ByteString -> BS.ByteString -> BS.ByteString
+onlySame a b = BS.pack $ map fst $ filter (uncurry (==)) $ BS.zip a b
