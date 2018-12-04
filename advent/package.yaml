@@ -1,6 +1,6 @@
-name:                day3
+name:                advent
 version:             0.1.0.0
-github:              "erochest/day3"
+github:              "erochest/advent"
 license:             BSD3
 author:              "Eric Rochester"
 maintainer:          "erochest@gmail.com"
@@ -12,26 +12,28 @@ extra-source-files:
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
-# category:            Play
+# category:            Utility
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/erochest/day3#readme>
+description:         Please see the README on GitHub at <https://github.com/erochest/advent#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 
-executables:
-  day3-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - advent
-    - attoparsec
-    - bytestring
-    - unordered-containers
+library:
+  source-dirs: src
+  dependencies:
+  - bytestring
+
+# tests:
+#   advent-test:
+#     main:                Spec.hs
+#     source-dirs:         test
+#     ghc-options:
+#     - -threaded
+#     - -rtsopts
+#     - -with-rtsopts=-N
+#     dependencies:
+#     - advent

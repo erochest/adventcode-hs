@@ -23,6 +23,7 @@ resolver: lts-12.21
 # Various formats can be used as shown in the example below.
 #
 # packages:
+# - some-directory
 # - https://example.com/foo/bar/baz-0.0.2.tar.gz
 # - location:
 #    git: https://github.com/commercialhaskell/stack.git
@@ -33,7 +34,6 @@ resolver: lts-12.21
 #  - wai
 packages:
 - .
-- ../advent
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
