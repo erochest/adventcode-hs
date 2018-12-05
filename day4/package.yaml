@@ -32,7 +32,12 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - advent
+    - attoparsec
+    - attoparsec-time
     - bytestring
+    - hashable
+    - time
+    - unordered-containers
 
 # tests:
 #   day4-test:
