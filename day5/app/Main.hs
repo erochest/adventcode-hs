@@ -1,23 +1,22 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
--- 10586
--- 10585
-
 module Main where
 
+import           Advent
+import qualified Data.ByteString.Builder    as B
 import qualified Data.ByteString.Lazy.Char8 as BS
-import qualified Data.ByteString.Builder as B
-import Advent
-import Data.Char
+import           Data.Char
 
 main :: IO ()
-main = interactAll
-     $ B.intDec
-     . length
-     . takeStable
-     . iterate react
-     . readPolymer
-     . BS.filter isAlpha
+main = interactAll partOne
+
+partOne :: BS.ByteString -> B.Builder
+partOne = B.intDec
+        . length
+        . takeStable
+        . iterate react
+        . readPolymer
+        . BS.filter isAlpha
 
 data Unit = Unit { unitType:: !Char, unitPositive:: !Bool }
   deriving (Show, Eq, Ord)
@@ -52,7 +51,7 @@ react = uncurry prepend . foldr step (Nothing, [])
       | otherwise = (Just current, prev:us)
 
     prepend :: Maybe Unit -> [Unit] -> [Unit]
-    prepend Nothing us = us
+    prepend Nothing us  = us
     prepend (Just u) us = u:us
 
 takeStable :: Eq a => [a] -> a
