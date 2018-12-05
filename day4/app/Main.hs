@@ -16,24 +16,23 @@ import qualified Data.List                        as L
 import           Data.Monoid
 import           Data.Ord
 import           Data.Time
+import           Data.Traversable
 
 
 main :: IO ()
-main = Advent.interact partOne
+main = Advent.interact partTwo
 
--- partOne
+-- Shared
 
-partOne :: [BS.ByteString] -> B.Builder
-partOne = B.intDec
-        . uncurry (*)
-        . second getMinuteAsleepMost
-        . maximumBy (comparing $ timeAsleep . snd)
-        . M.toList
-        . compileTable
-        . L.sortBy (comparing obsDateTime)
-        . either error id
-        . mapM parseLog
-        . filter (not . BS.null)
+readTable :: [BS.ByteString] -> GuardTable
+readTable = compileTable
+          . L.sortBy (comparing obsDateTime)
+          . either error id
+          . mapM parseLog
+          . filter (not . BS.null)
+
+checksumBuild :: (Int, Int) -> B.Builder
+checksumBuild = B.intDec . uncurry (*)
 
 data Log
   = Log
@@ -54,6 +53,7 @@ type DateTable = M.HashMap MonthDay SleepTable
 type Minute = Int
 type SleepTable = S.HashSet Minute
 type SleepCounts = CountMap Minute
+type SleepMinutes = CountMap (GuardID, Minute)
 
 newtype CountMap a = CountMap { getMap :: M.HashMap a (Sum Int) }
 
@@ -63,8 +63,8 @@ instance (Eq a, Hashable a) => Semigroup (CountMap a) where
 instance (Eq a, Hashable a) => Monoid (CountMap a) where
   mempty = CountMap M.empty
 
-incr :: (Eq a, Hashable a) => a -> CountMap a -> CountMap a
-incr k (CountMap c) = CountMap $ M.insertWith (<>) k (Sum 1) c
+incr :: (Eq a, Hashable a) => CountMap a -> a -> CountMap a
+incr (CountMap c) k = CountMap $ M.insertWith (<>) k (Sum 1) c
 
 insertRangeAsleep :: GuardID -> UTCTime -> UTCTime -> GuardTable -> GuardTable
 insertRangeAsleep gid asleep awake = M.alter insertDateTable gid
@@ -119,6 +119,15 @@ compileTable = thd . foldl' step (Nothing, Nothing, M.empty)
          Log{obsDateTime=wakesUp, obsState=WakesUp} =
       (jGid, Nothing, insertRangeAsleep gid asleep wakesUp guardTable)
 
+-- partOne
+
+partOne :: [BS.ByteString] -> B.Builder
+partOne = checksumBuild
+        . second getMinuteAsleepMost
+        . maximumBy (comparing $ timeAsleep . snd)
+        . M.toList
+        . readTable
+
 timeAsleep :: DateTable -> Int
 timeAsleep = sum . concatMap S.toList . M.elems
 
@@ -126,8 +135,27 @@ minutesAsleep :: [SleepTable] -> SleepCounts
 minutesAsleep = foldl' step mempty
   where
     step :: SleepCounts -> SleepTable -> SleepCounts
-    step counts = foldl' (flip incr) counts . S.toList
+    step counts = foldl' incr counts . S.toList
 
 getMinuteAsleepMost :: DateTable -> Minute
 getMinuteAsleepMost =
   fst . maximumBy (comparing snd) . M.toList . getMap . minutesAsleep . M.elems
+
+-- partTwo
+
+partTwo :: [BS.ByteString] -> B.Builder
+partTwo = checksumBuild
+        . fst
+        . maximumBy (comparing snd)
+        . M.toList
+        . getMap
+        . sleepMinutes
+        . readTable
+
+sleepMinutes :: GuardTable -> SleepMinutes
+sleepMinutes = foldl' incr mempty
+             . concatMap (sequenceA . second dateTableMinutes)
+             . M.toList
+
+dateTableMinutes :: DateTable -> [Minute]
+dateTableMinutes = concatMap S.toList . M.elems
