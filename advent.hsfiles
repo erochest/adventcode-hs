@@ -31,8 +31,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    dependencies:
-    - advent
+    # dependencies:
+    # - advent
     - bytestring
 
 {-# START_FILE Setup.hs #-}
