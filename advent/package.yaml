@@ -25,15 +25,5 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+  - attoparsec
   - bytestring
-
-# tests:
-#   advent-test:
-#     main:                Spec.hs
-#     source-dirs:         test
-#     ghc-options:
-#     - -threaded
-#     - -rtsopts
-#     - -with-rtsopts=-N
-#     dependencies:
-#     - advent
